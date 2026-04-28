@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API 互動教學教室 - 從密鑰到雲端展示</title>
+    <title>API 互動教學教室 - 即時除錯與實作</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f2f5; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f2f5; font-size: 1.1rem; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         
@@ -27,132 +27,191 @@
         .packet-right { animation: flowRight 2s infinite linear; }
         .packet-left { animation: flowLeft 2s infinite linear; }
         
-        .step-num { @apply bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center shrink-0 font-bold text-sm; }
+        .step-num { @apply bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center shrink-0 font-bold text-lg; }
+        
+        .prompt-box { background: #1e1e1e; color: #d4d4d4; padding: 2rem; border-radius: 0.75rem; font-family: monospace; position: relative; line-height: 1.8; }
+        .copy-btn { position: absolute; top: 0.75rem; right: 0.75rem; background: #444; color: white; padding: 0.4rem 1rem; border-radius: 0.4rem; font-size: 0.9rem; cursor: pointer; transition: background 0.2s; }
+        .copy-btn:hover { background: #666; }
+
+        .error-example { background: #fff1f2; border: 2px solid #fecaca; padding: 1.5rem; border-radius: 0.75rem; color: #991b1b; }
+        
+        .flow-step { @apply relative flex flex-col items-center text-center p-4 border-2 border-transparent hover:border-blue-200 hover:bg-blue-50 rounded-2xl transition-all; }
+        .flow-arrow { @apply hidden md:block absolute -right-4 top-1/3 text-gray-300 text-2xl; }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="p-4 md:p-12">
 
     <div class="max-w-5xl mx-auto">
         <!-- 標題區 -->
-        <header class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-blue-600 mb-2">🤖 API 互動教學教室</h1>
-            <p class="text-gray-600">從申請 API 到 GitHub 雲端部署，完成你的第一個 AI 專案</p>
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-blue-600 mb-4">🤖 API 互動教學教室</h1>
+            <p class="text-xl text-gray-600">從申請 API 到 GitHub 雲端部署，完成你的第一個 AI 專案</p>
         </header>
 
         <!-- 導覽標籤 -->
-        <div class="flex border-b border-gray-300 mb-6 bg-white rounded-t-xl overflow-hidden shadow-sm flex-wrap">
-            <button onclick="showTab('guide')" id="btn-guide" class="tab-btn flex-1 min-w-[120px] py-4 font-medium transition-colors border-b-2 border-blue-600 text-blue-600 bg-blue-50">1. 申請密鑰</button>
-            <button onclick="showTab('logic')" id="btn-logic" class="tab-btn flex-1 min-w-[120px] py-4 font-medium transition-colors border-b-2 border-transparent text-gray-500 hover:bg-gray-50">2. 運作原理</button>
-            <button onclick="showTab('github')" id="btn-github" class="tab-btn flex-1 min-w-[120px] py-4 font-medium transition-colors border-b-2 border-transparent text-gray-500 hover:bg-gray-50">3. GitHub 展示</button>
+        <div class="flex border-b border-gray-300 mb-8 bg-white rounded-t-xl overflow-hidden shadow-sm flex-wrap">
+            <button onclick="showTab('guide')" id="btn-guide" class="tab-btn flex-1 min-w-[140px] py-5 text-lg font-medium transition-colors border-b-4 border-blue-600 text-blue-600 bg-blue-50">1. 申請密鑰</button>
+            <button onclick="showTab('logic')" id="btn-logic" class="tab-btn flex-1 min-w-[140px] py-5 text-lg font-medium transition-colors border-b-4 border-transparent text-gray-500 hover:bg-gray-50">2. 運作原理</button>
+            <button onclick="showTab('prompt')" id="btn-prompt" class="tab-btn flex-1 min-w-[140px] py-5 text-lg font-medium transition-colors border-b-4 border-transparent text-gray-500 hover:bg-gray-50">3. 實作提示詞</button>
+            <button onclick="showTab('github')" id="btn-github" class="tab-btn flex-1 min-w-[140px] py-5 text-lg font-medium transition-colors border-b-4 border-transparent text-gray-500 hover:bg-gray-50">4. GitHub 展示</button>
         </div>
 
         <!-- 內容區 1: 申請指南 -->
-        <div id="guide" class="tab-content active bg-white p-6 rounded-b-xl shadow-md">
-            <h2 class="text-xl font-bold mb-4">第一步：取得 API Key</h2>
-            <div class="grid md:grid-cols-2 gap-8 items-center">
-                <div class="space-y-4">
-                    <div class="flex items-start gap-3">
+        <div id="guide" class="tab-content active bg-white p-8 rounded-b-xl shadow-md">
+            <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">第一步：取得 API Key</h2>
+            <div class="grid md:grid-cols-2 gap-10 items-center">
+                <div class="space-y-6">
+                    <div class="flex items-start gap-4">
                         <span class="step-num">1</span>
-                        <p>訪問 <a href="https://aistudio.google.com/" target="_blank" class="text-blue-500 underline">Google AI Studio</a> 並登入。</p>
+                        <p class="text-lg">訪問 <a href="https://aistudio.google.com/" target="_blank" class="text-blue-500 underline font-bold">Google AI Studio</a> 並登入。</p>
                     </div>
-                    <div class="flex items-start gap-3">
+                    <div class="flex items-start gap-4">
                         <span class="step-num">2</span>
-                        <p>點擊左側 <b>"Get API key"</b> 並創建一個新的 Key。</p>
+                        <p class="text-lg">點擊左側 <b>"Get API key"</b> 並創建一個新的 Key。</p>
                     </div>
-                    <div class="flex items-start gap-3">
+                    <div class="flex items-start gap-4">
                         <span class="step-num">3</span>
-                        <p><b>複製</b>這串密碼，這就是你程式碼中 `apiKey` 變數要填入的值。</p>
-                    </div>
-                    <div class="p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 text-sm">
-                        💡 <b>提示：</b> API Key 就像銀行密碼，請不要貼給不認識的人。
+                        <p class="text-lg"><b>複製</b>這串密碼，稍後貼入你做好的網頁中測試。</p>
                     </div>
                 </div>
-                <div class="bg-gray-100 p-8 rounded-lg text-center">
-                    <span class="text-6xl">🔑</span>
-                    <p class="mt-4 text-gray-500 italic">"API Key 是與 AI 溝通的通行證"</p>
+                <div class="bg-gray-100 p-12 rounded-lg text-center border-2 border-dashed border-gray-200">
+                    <span class="text-8xl">🔑</span>
+                    <p class="mt-6 text-gray-500 italic text-lg">"API Key 是進入 AI 腦袋的唯一鑰匙"</p>
                 </div>
             </div>
         </div>
 
         <!-- 內容區 2: 運作原理 -->
-        <div id="logic" class="tab-content bg-white p-6 rounded-b-xl shadow-md">
-            <h2 class="text-xl font-bold mb-4">API 是如何對話的？</h2>
-            <div class="bg-slate-50 p-8 rounded-xl relative h-64 border border-dashed border-gray-300 overflow-hidden mb-6">
+        <div id="logic" class="tab-content bg-white p-8 rounded-b-xl shadow-md">
+            <h2 class="text-2xl font-bold mb-6">API 是如何傳輸資料的？</h2>
+            <div class="bg-slate-50 p-10 rounded-xl relative h-80 border border-dashed border-gray-300 overflow-hidden mb-8">
                 <div class="absolute left-10 top-1/2 -translate-y-1/2 text-center">
-                    <div class="text-4xl">💻</div>
-                    <p class="text-xs font-bold mt-2">你的網頁<br>(Client)</p>
+                    <div class="text-6xl">💻</div>
+                    <p class="text-sm font-bold mt-3 font-mono text-blue-600 uppercase">Frontend</p>
+                    <p class="text-base font-bold text-blue-800">網頁前端</p>
                 </div>
                 <div class="absolute right-10 top-1/2 -translate-y-1/2 text-center">
-                    <div class="text-4xl">☁️</div>
-                    <p class="text-xs font-bold mt-2">Gemini 伺服器<br>(Server)</p>
+                    <div class="text-6xl">☁️</div>
+                    <p class="text-sm font-bold mt-3 font-mono text-green-600 uppercase">Gemini API</p>
+                    <p class="text-base font-bold text-green-800">伺服器</p>
                 </div>
-                <div id="visual-packet" class="hidden absolute top-1/2 -translate-y-1/2 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-[10px] text-white shadow-lg italic">Data</div>
-                <div class="w-full h-[2px] bg-gray-200 absolute top-1/2 -z-10"></div>
+                <div id="visual-packet" class="hidden absolute top-1/2 -translate-y-1/2 w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-xs text-white shadow-xl italic font-bold">Data</div>
+                <div class="w-full h-1 bg-gray-200 absolute top-1/2 -z-10"></div>
             </div>
-            <div class="grid md:grid-cols-2 gap-4">
-                <div class="p-4 border rounded-lg hover:border-blue-300 transition-colors cursor-pointer" onclick="animateFlow('request')">
-                    <h3 class="font-bold text-blue-600 mb-2 text-lg">➡️ Request (請求)</h3>
-                    <p class="text-sm text-gray-600">你的網頁把「問題」和「API Key」打包成 JSON 包裹送出去。</p>
+            <div class="grid md:grid-cols-2 gap-6">
+                <button onclick="animateFlow('request')" class="p-6 border-2 border-gray-100 rounded-xl text-left hover:bg-blue-50 hover:border-blue-200 transition-all shadow-sm">
+                    <h3 class="font-bold text-blue-600 mb-2 text-xl">➡️ Request (請求)</h3>
+                    <p class="text-base text-gray-600">你的問題 + API Key 會打包成 JSON 資料送出去。</p>
+                </button>
+                <button onclick="animateFlow('response')" class="p-6 border-2 border-gray-100 rounded-xl text-left hover:bg-green-50 hover:border-green-200 transition-all shadow-sm">
+                    <h3 class="font-bold text-green-600 mb-2 text-xl">⬅️ Response (回應)</h3>
+                    <p class="text-base text-gray-600">伺服器回傳答案，或者告訴你為什麼發生錯誤。</p>
+                </button>
+            </div>
+        </div>
+
+        <!-- 內容區 3: 實作提示詞 -->
+        <div id="prompt" class="tab-content bg-white p-8 rounded-b-xl shadow-md">
+            <h2 class="text-2xl font-bold mb-6">第三步：讓 Gemini 幫你寫出具備「偵錯」功能的網頁</h2>
+            
+            <!-- 實測報錯範例 -->
+            <div class="mb-10">
+                <h3 class="text-xl font-bold text-red-600 mb-4 flex items-center gap-2">⚠️ 真實錯誤案例：當額度用完時</h3>
+                <div class="error-example">
+                    <p class="font-mono text-sm mb-4 leading-relaxed">
+                        ✗ 失敗：You exceeded your current quota, please check your plan and billing details. For more information on this error... Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests... Please retry in 23.78s.
+                    </p>
+                    <div class="bg-white p-4 rounded-lg border border-red-200">
+                        <p class="text-lg font-bold mb-1">💡 白話文解釋：</p>
+                        <p class="text-base">「這代表你問得太快了，或是今天的免費次數已經用光了。請休息 23 秒後再試一次！」</p>
+                    </div>
                 </div>
-                <div class="p-4 border rounded-lg hover:border-green-300 transition-colors cursor-pointer" onclick="animateFlow('response')">
-                    <h3 class="font-bold text-green-600 mb-2 text-lg">⬅️ Response (回應)</h3>
-                    <p class="text-sm text-gray-600">Gemini 算出答案後，把文字裝進包裹回傳給你的網頁。</p>
+            </div>
+
+            <p class="text-gray-700 mb-6 text-lg leading-relaxed">請複製以下提示詞並貼給 Gemini，它會幫你把生硬的錯誤訊息變成上面的白話文：</p>
+            
+            <div class="prompt-box text-base md:text-lg mb-8">
+                <button class="copy-btn" onclick="copyPrompt()">複製提示詞</button>
+                <div id="prompt-text">
+                    請幫我生成一個單一 HTML 檔案，包含以下功能：<br>
+                    1. 介面頂部有 API Key 輸入框，以及一個下拉選單供選擇對話風格。<br>
+                    2. 使用 JavaScript 串接最新的 Gemini API 模型。<br>
+                    3. **核心功能：錯誤白話文回饋**。如果 API 請求失敗（例如報錯 "Quota exceeded"），請將生硬的英文錯誤翻譯成白話文告訴使用者。例如：「問太快了，請稍等再試」或「API Key 貼錯了」。<br>
+                    4. 介面要現代化，使用 Tailwind CSS，對話要有氣泡感，並在等待回覆時顯示「思考中...」的動畫。<br>
+                    5. 所有程式碼（HTML/CSS/JS）需在同一個檔案內。
                 </div>
             </div>
         </div>
 
-        <!-- 內容區 3: GitHub 展示 -->
-        <div id="github" class="tab-content bg-white p-6 rounded-b-xl shadow-md">
-            <h2 class="text-xl font-bold mb-4">最後一步：把網頁發佈到網路上</h2>
-            <p class="text-gray-600 mb-6 text-sm">想把這個聊天機器人傳給朋友玩嗎？使用免費的 GitHub Pages 服務：</p>
+        <!-- 內容區 4: GitHub 展示 (新增建議流程) -->
+        <div id="github" class="tab-content bg-white p-8 rounded-b-xl shadow-md">
+            <h2 class="text-2xl font-bold mb-8 text-center">最後一步：GitHub 雲端部署建議流程</h2>
             
-            <div class="space-y-6">
-                <div class="flex gap-4 items-start">
-                    <span class="step-num mt-1">1</span>
-                    <div class="flex-1">
-                        <h4 class="font-bold">準備好檔案</h4>
-                        <p class="text-sm text-gray-500">將你的程式碼存檔，檔名一定要叫 <code class="bg-gray-100 px-1 rounded">index.html</code>。</p>
-                    </div>
+            <!-- 建議實作流程圖 -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-12">
+                <div class="flow-step">
+                    <div class="text-3xl mb-2">📄</div>
+                    <h4 class="font-bold text-sm mb-1">1. 檔案準備</h4>
+                    <p class="text-[10px] text-gray-500">將程式碼存為 index.html</p>
+                    <div class="flow-arrow">➜</div>
                 </div>
-
-                <div class="flex gap-4 items-start">
-                    <span class="step-num mt-1">2</span>
-                    <div class="flex-1">
-                        <h4 class="font-bold">上傳至 GitHub</h4>
-                        <p class="text-sm text-gray-500">在 GitHub 點擊 <b>New Repository</b>，取個名字（例如 <code>my-ai-bot</code>），然後將檔案拖進去上傳。</p>
-                    </div>
+                <div class="flow-step">
+                    <div class="text-3xl mb-2">📁</div>
+                    <h4 class="font-bold text-sm mb-1">2. 建立倉庫</h4>
+                    <p class="text-[10px] text-gray-500">GitHub 新增 Repository</p>
+                    <div class="flow-arrow">➜</div>
                 </div>
-
-                <div class="flex gap-4 items-start">
-                    <span class="step-num mt-1">3</span>
-                    <div class="flex-1">
-                        <h4 class="font-bold">開啟網頁開關</h4>
-                        <p class="text-sm text-gray-500">進入該專案的 <b>Settings</b> > <b>Pages</b>，在 Branch 選擇 <b>Main</b> 並按下 <b>Save</b>。</p>
-                    </div>
+                <div class="flow-step">
+                    <div class="text-3xl mb-2">📤</div>
+                    <h4 class="font-bold text-sm mb-1">3. 上傳檔案</h4>
+                    <p class="text-[10px] text-gray-500">拖曳檔案至 GitHub</p>
+                    <div class="flow-arrow">➜</div>
                 </div>
-
-                <div class="flex gap-4 items-start">
-                    <span class="step-num mt-1">4</span>
-                    <div class="flex-1">
-                        <h4 class="font-bold text-green-600 font-bold">獲得網址！</h4>
-                        <div class="p-3 bg-green-50 border border-green-200 rounded text-green-800 text-xs">
-                            等待約 1 分鐘，你會得到一個網址：<br>
-                            <code>https://你的帳號.github.io/my-ai-bot/</code>
-                        </div>
-                    </div>
+                <div class="flow-step">
+                    <div class="text-3xl mb-2">⚙️</div>
+                    <h4 class="font-bold text-sm mb-1">4. 開啟 Pages</h4>
+                    <p class="text-[10px] text-gray-500">Settings 選單啟動</p>
+                    <div class="flow-arrow">➜</div>
+                </div>
+                <div class="flow-step">
+                    <div class="text-3xl mb-2">🌍</div>
+                    <h4 class="font-bold text-sm mb-1">5. 成功發佈</h4>
+                    <p class="text-[10px] text-gray-500">獲得公開網址</p>
                 </div>
             </div>
 
-            <div class="mt-8 p-4 bg-blue-50 rounded-lg flex items-center gap-4">
-                <div class="text-3xl">🚀</div>
-                <div class="text-sm text-blue-700">
-                    <b>挑戰：</b> 試著在 GitHub 網頁上輸入你剛剛申請的 API Key，看看對話功能是否運作正常！
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- 詳細步驟說明 -->
+                <div class="space-y-6">
+                    <h3 class="text-xl font-bold border-b-2 border-blue-100 pb-2">📋 部署清單</h3>
+                    <div class="flex items-start gap-3">
+                        <input type="checkbox" class="mt-1 w-5 h-5">
+                        <p class="text-base text-gray-700">確認檔名是否為全小寫 <b>index.html</b> (檔名錯了網頁會打不開)。</p>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <input type="checkbox" class="mt-1 w-5 h-5">
+                        <p class="text-base text-gray-700">進入 <b>Settings > Pages</b>，Source 選擇 "Deploy from a branch"。</p>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <input type="checkbox" class="mt-1 w-5 h-5">
+                        <p class="text-base text-gray-700">Branch 選擇 <b>main</b>，資料夾選擇 <b>/ (root)</b>，點擊 Save。</p>
+                    </div>
+                </div>
+
+                <!-- 預期成果 -->
+                <div class="bg-indigo-50 p-8 rounded-2xl border border-indigo-100 shadow-sm">
+                    <h3 class="text-xl font-bold text-indigo-900 mb-4">✨ 預期成果</h3>
+                    <p class="text-base text-indigo-700 mb-4">發佈成功後，你會得到一個網址，這代表你已經將 AI 助手部署到了全球雲端：</p>
+                    <div class="bg-white p-3 rounded-lg font-mono text-sm border border-indigo-200 text-blue-600 mb-4 text-center">
+                        https://你的帳號.github.io/專案名/
+                    </div>
+                    <p class="text-xs text-indigo-500 italic text-center">💡 提示：部署通常需要 1~2 分鐘才會生效，請耐心等待。</p>
                 </div>
             </div>
         </div>
         
-        <footer class="mt-8 text-center text-gray-400 text-xs">
-            由 Gemini 教學環境提供 &copy; 2024
+        <footer class="mt-12 text-center text-gray-400 text-sm border-t pt-6">
+            由 Gemini 教學環境提供 &copy; 2024 - 教學用互動教材
         </footer>
     </div>
 
@@ -191,6 +250,20 @@
                     packet.classList.add('packet-left');
                 }, 10);
             }
+        }
+
+        function copyPrompt() {
+            const text = document.getElementById('prompt-text').innerText;
+            const temp = document.createElement('textarea');
+            temp.value = text;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            
+            const btn = document.querySelector('.copy-btn');
+            btn.innerText = '✅ 已複製！';
+            setTimeout(() => btn.innerText = '複製提示詞', 2000);
         }
     </script>
 </body>
